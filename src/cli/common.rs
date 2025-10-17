@@ -22,4 +22,3 @@ pub fn get_default_akari_envs_dir() -> Option<PathBuf> {
     UserDirs::new()
         .map(|dirs| dirs.home_dir().join(AKARI_ENVS_DIR))
 }
-

@@ -33,13 +33,32 @@ pub fn execute(args: Args){
     let _ = Command::new("pixi")
         .arg("init")
         .current_dir(&project_env_dir)
-        .spawn()
+        .output()
         .expect("Failed to execute command");
 
     // Install the pixi project
     let _ = Command::new("pixi")
         .arg("install")
         .current_dir(&project_env_dir)
-        .spawn()
+        .output()
         .expect("Failed to execute command");
+
+    // Generate the activation script
+    let activation_output = Command::new("pixi")
+        .arg("shell-hook")
+        .current_dir(&project_env_dir)
+        .output()
+        .expect("Failed to execute command");
+
+    if !activation_output.status.success() {
+        println!("Command failed with exit code: {:?}", activation_output.status.code());
+        return
+    }
+
+    // Finally, write to file
+    let activation_stdout = String::from_utf8_lossy(&activation_output.stdout);
+    fs::write(&project_env_dir.join("activate.sh"), activation_stdout.as_bytes())
+        .expect("Failed to write to file");
+
+   
 }
