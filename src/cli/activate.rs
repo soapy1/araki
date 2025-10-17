@@ -1,5 +1,6 @@
 use clap::Parser;
 use std::process::Command;
+use std::fs;
 
 use crate::cli::common;
 
@@ -37,10 +38,10 @@ pub fn execute(args: Args) {
         return
     }
 
-    // TODO: write activation code to a file, so that we can 
-    // unset it for deactivating the environment
-
     // Finally, write to file
     let activation_stdout = String::from_utf8_lossy(&activation_output.stdout);
+    fs::write(&project_env_dir.join("activate.sh"), activation_stdout.as_bytes())
+        .expect("Failed to write to file");
+
     println!("{}", activation_stdout)
 }

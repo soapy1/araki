@@ -36,3 +36,11 @@ From this point, users can use pixi like they normally would. For example, add p
 ```
 $ pixi add python numpy
 ```
+
+List what other environments are managed by akari by running the `envs` command
+```
+$ akari envs ls
+Available envs:
+* myproj
+* projmy
+```
