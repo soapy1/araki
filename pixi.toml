@@ -12,3 +12,6 @@ start = "cargo run"
 
 [dependencies]
 rust = ">=1.90.0,<1.91"
+openssl = ">=3.5.4,<4"
+pkg-config = ">=0.29.2,<0.30"
+compilers = ">=1.11.0,<2"
