@@ -36,11 +36,31 @@ pub fn execute(args: Args){
         .output()
         .expect("Failed to execute command");
 
+    // Initialize the git repo
+    let _ = Command::new("git")
+        .arg("init")
+        .current_dir(&project_env_dir)
+        .output()
+        .expect("Failed to execute command");
+
     // Install the pixi project
     let _ = Command::new("pixi")
         .arg("install")
         .current_dir(&project_env_dir)
         .output()
         .expect("Failed to execute command");
-   
+
+    // Add initial git commit
+    let _ = Command::new("git")
+        .arg("add") 
+        .arg(".")
+        .current_dir(&project_env_dir)
+        .output()
+        .expect("Failed to execute command");
+    let _ = Command::new("git")
+        .arg("commit")
+        .arg("-m \"Initial commit\"")
+        .current_dir(&project_env_dir)
+        .output()
+        .expect("Failed to execute command");
 }
