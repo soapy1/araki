@@ -37,6 +37,11 @@ From this point, users can use pixi like they normally would. For example, add p
 $ pixi add python numpy
 ```
 
+Save a checkpoint by running the `save` command
+```
+$ akari save --tag v1
+```
+
 Deactivate the environment
 ```
 $ eval "$(akari deactivate)"
@@ -51,6 +56,6 @@ Available envs:
 ```
 
 ##  Next steps
-* Sort out how saving/checkpointing an environment should work
+* Sort out how saving/checkpointing an environment should work - git
 * Add shell prefix so users know what environment they are in
 * Rethink how activation/deactivation of environments should work

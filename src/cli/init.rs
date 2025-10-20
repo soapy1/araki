@@ -36,6 +36,7 @@ pub fn execute(args: Args){
         .output()
         .expect("Failed to execute command");
 
+    // TODO: change this to use git2
     // Initialize the git repo
     let _ = Command::new("git")
         .arg("init")

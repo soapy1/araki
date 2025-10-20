@@ -1,0 +1,48 @@
+use clap::Parser;
+use std::env;
+use std::path::Path;
+use git2::{Repository, Signature};
+
+
+#[derive(Parser, Debug, Default)]
+pub struct Args {
+    // TODO: name of the environment, defaults to the current active environment
+    // #[arg(short, long, help="Name of target environment. Defaults to the current active environment if available")]
+    // name: Option<String>,
+    
+    // name of the tag
+    #[arg(short, long, required = true, help="Name of the tag")]
+    tag: String, 
+ }
+
+pub fn execute(args: Args) {
+    match env::var("PIXI_PROJECT_ROOT") {
+        Ok(_val) => println!("Saving project with tag '{}'", args.tag),
+        Err(_) => println!("No project is currently activated"),
+    }
+
+    let project_env_dir = env::var("PIXI_PROJECT_ROOT").unwrap();
+    // TODO: error checking to make sure the project_env_dir exists
+
+    let repo = Repository::open(&project_env_dir).expect("Failed to open repository");
+    let mut index = repo.index().expect("Failed to get index");
+    index.add_path(Path::new("pixi.toml")).expect("unable to add pixi.toml");
+    index.add_path(Path::new("pixi.lock")).expect("unable to add pixi.lock");
+    index.write().expect("Failed to write index");
+
+    let tree_oid = index.write_tree().expect("failed to write tree");
+    let tree = repo.find_tree(tree_oid).expect("failed to find tree");
+    let signature = Signature::now("akari", "place@holder.com").expect("failed to get signature");
+    let head = repo.head().expect("Failed to get HEAD");
+    let parent_commit = repo.find_commit(head.target().expect("Failed to get HEAD target OID")).expect("Failed to find parent commit");
+
+    // TODO: should this create a tag?
+    repo.commit(
+        Some("HEAD"), // Update the HEAD reference
+        &signature,    // Author
+        &signature,    // Committer
+        &args.tag, // Commit message
+        &tree,         // Tree containing the staged changes
+        &[&parent_commit], // Parent commit(s)
+    ).expect("Failed to create commit");
+}
