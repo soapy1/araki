@@ -13,6 +13,9 @@ pub struct Args {
     // name of the tag
     #[arg(help="Name of the tag")]
     tag: String, 
+
+    #[arg(short, long, help="Description of the tag")]
+    description: Option<String>
  }
 
 pub fn execute(args: Args) {
@@ -52,7 +55,13 @@ pub fn execute(args: Args) {
     // Get the OID of the commit to tag (e.g., HEAD)
     let head =  repo.revparse_single("HEAD").expect("unable to find HEAD");
 
-    let tag_message = format!("akari environment tag: {}", args.tag);
+    let tag_message: String;
+    if let Some(ref message) = args.description {
+        tag_message = message.to_string();
+    } else {
+        tag_message = format!("akari environment tag: {}", args.tag)
+    }
+
     repo.tag(
         &args.tag,
         &head,
