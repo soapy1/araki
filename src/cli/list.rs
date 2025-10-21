@@ -1,12 +1,15 @@
 use clap::Parser;
 use std::env;
 use git2::{Repository, Tag};
-
+use std::process::Command;
 
 #[derive(Parser, Debug, Default)]
-pub struct Args { }
+pub struct Args { 
+    #[arg(long, help="Switch to print out the list of checkpoints as a tree")]
+    tree: bool
+}
 
-pub fn execute(_args: Args) {
+pub fn execute(args: Args) {
     match env::var("PIXI_PROJECT_ROOT") {
         Ok(_val) => println!("Available tags:"),
         Err(_) => println!("No project is currently activated"),
@@ -16,16 +19,28 @@ pub fn execute(_args: Args) {
     // TODO: error checking to make sure the project_env_dir exists
 
     let repo = Repository::open(&project_env_dir).expect("Failed to open repository");
-    let tags = repo.tag_names(Some("*")).unwrap();
 
-    for name_w in tags.iter() {
-        let name = name_w.unwrap();
-        let obj = repo.revparse_single(name).expect("Unable to get tag");
+    if args.tree {
+        let tree_output = Command::new("git")
+            .arg("tree") 
+            .current_dir(&project_env_dir)
+            .output()
+            .expect("Failed to execute command");
+        let tree_stdout = String::from_utf8_lossy(&tree_output.stdout);
+        println!("{}", tree_stdout);
 
-        if let Some(tag) = obj.as_tag() {
-            print_tag(tag);
-        } else {
-            print_name(name);
+    } else {
+        let tags = repo.tag_names(Some("*")).unwrap();
+
+        for name_w in tags.iter() {
+            let name = name_w.unwrap();
+            let obj = repo.revparse_single(name).expect("Unable to get tag");
+
+            if let Some(tag) = obj.as_tag() {
+                print_tag(tag);
+            } else {
+                print_name(name);
+            }
         }
     }
 }
