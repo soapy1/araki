@@ -1,4 +1,4 @@
-[project]
+[workspace]
 authors = ["sophia <scastellarin@quansight.com>"]
 channels = ["conda-forge"]
 description = "akari demo - manage and share environments"
