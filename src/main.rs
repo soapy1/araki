@@ -9,12 +9,13 @@ use crate::cli::list;
 use crate::cli::pull;
 use crate::cli::push;
 use crate::cli::tag;
+use crate::cli::shell;
 
 pub mod cli;
 
 /// Manage and share environments
 #[derive(Parser, Debug)]
-#[command(author, version, about = "Manage and version pixi environments")]
+#[command(author, version, about = "Nebari environment management")]
 pub struct Cli {
     // Manage environments
     #[command(subcommand)]
@@ -22,6 +23,7 @@ pub struct Cli {
 }
 
 #[derive(Subcommand, Debug)]
+#[command(arg_required_else_help = true)]
 pub enum Command {
     /// Activate an environment
     Activate(activate::Args),
@@ -43,7 +45,7 @@ pub enum Command {
 
     /// Pull changes from the remote repo
     Pull(pull::Args),
-    
+
     /// Push changes to the remote repo
     Push(push::Args),
 
@@ -54,20 +56,20 @@ pub enum Command {
 pub fn main() {
     let cli = Cli::parse();
 
-    let Some(command) = cli.command else {
-        // match CI expectations
+    if let Some(cmd) = cli.command {
+        match cmd {
+            Command::Activate(cmd) => activate::execute(cmd),
+            Command::Checkout(cmd) => checkout::execute(cmd),
+            Command::Deactivate(cmd) => deactivate::execute(cmd),
+            Command::Envs(cmd) => envs::execute(cmd),
+            Command::Init(cmd) => init::execute(cmd),
+            Command::List(cmd) => list::execute(cmd),
+            Command::Pull(cmd) => pull::execute(cmd),
+            Command::Push(cmd) => push::execute(cmd),
+            Command::Tag(cmd) => tag::execute(cmd),
+            Command::Shell(cmd) => shell::execute(cmd),
+        }
+    } else {
         std::process::exit(2);
-    };
-
-    match command {
-        Command::Activate(cmd) => activate::execute(cmd),
-        Command::Checkout(cmd) => checkout::execute(cmd),
-        Command::Deactivate(cmd) => deactivate::execute(cmd),
-        Command::Envs(cmd) => envs::execute(cmd),
-        Command::Init(cmd) => init::execute(cmd),
-        Command::List(cmd) => list::execute(cmd),
-        Command::Pull(cmd) => pull::execute(cmd),
-        Command::Push(cmd) => push::execute(cmd),
-        Command::Tag(cmd) => tag::execute(cmd),
     }
 }
