@@ -103,7 +103,7 @@ impl Shell {
                     .map_err(|_| format!("Unable to write shim to {shim_path:?}"))?;
 
                 let _ = writeln!(&mut shim, "#!/bin/{self}");
-                let _ = writeln!(&mut shim, "araki shim {tool} $@");
+                let _ = writeln!(&mut shim, "araki shim -- {tool} $@");
 
                 let perms = shim
                     .metadata()
