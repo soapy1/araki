@@ -1,14 +1,18 @@
-use clap::Parser;
-use std::{env, process::Command};
+use clap::{Parser};
+use std::{env, process::{Command}};
 
 use crate::cli::common::get_default_araki_bin_dir;
 
 #[derive(Parser, Debug)]
+#[command(arg_required_else_help = true)]
 pub struct Args {
+    /// Invocation of another env management tool, e.g. `pip install foo`
+    #[arg(num_args = 1..)]
     args: Vec<String>
 }
 
-fn strip_araki_shim_path(path: String) -> Result<String, String> {
+
+fn strip_araki_shim_path(path: String) -> Result<Vec<String>, String> {
     let araki_bin_dir = get_default_araki_bin_dir()?;
     Ok(
         path
@@ -19,29 +23,39 @@ fn strip_araki_shim_path(path: String) -> Result<String, String> {
 }
 
 pub fn execute(args: Args) {
-    let value  = env::var("ARAKI_OVERRIDE_SHIM").unwrap_or("false".to_string());
-    if value == "1" || value.to_lowercase().trim() == "true" {
+    let value = env::var("ARAKI_OVERRIDE_SHIM").unwrap_or("false".to_string());
+    if value.trim() == "1" {
         // Run the requested command using the modified PATH
         let current_path = env::var_os("PATH")
             .and_then(|path| path.into_string().ok());
 
-        let mut command = Command::new("pip");
-        if let Some(path) = current_path {
-            match strip_araki_shim_path(path) {
-                Ok(new_env) => command.env("PATH", new_env),
-                Err(err) => {
-                    eprintln!("Unable to strip the araki shim path from PATH:\n{err}");
-                    return;
-                }
-            };
+        if let [tool, arguments @ ..] = args.args.as_slice() {
+            let mut command = Command::new(tool);
+            if let Some(path) = current_path {
+
+                println!("{}", strip_araki_shim_path(path.clone()).unwrap());
+
+                match strip_araki_shim_path(path) {
+                    Ok(new_env) => command.env("PATH", new_env),
+                    Err(err) => {
+                        eprintln!("Unable to strip the araki shim path from PATH:\n{err}");
+                        return;
+                    }
+                };
+            }
+            let _ = command
+                .args(arguments)
+                .spawn()
+                .map_err(|err| eprintln!("Error running command {tool}: {err}"));
+        } else {
+            eprintln!("Could not destructure the command you passed.");
         }
-        let _ = command
-            .spawn()
-            .map_err(|err| eprintln!("{err}"));
+
     } else {
+        let passed_args = args.args.join(" ");
         eprintln!(
-            "Unable to run `{args:?}`; use araki for environment management. \
-            To use the {args:?} anyway, set ARAKI_OVERRIDE_SHIM=1."
+            "Unable to run {passed_args}; use araki for environment management. \
+            Set ARAKI_OVERRIDE_SHIM=1 to run the command anyway."
         )
     }
 }

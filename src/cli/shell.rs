@@ -1,6 +1,8 @@
 use clap::Parser;
 use directories::UserDirs;
+use std::fs::{Permissions, exists, remove_file, set_permissions};
 use std::io::Write;
+use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use std::{
     fmt::{self},
@@ -79,17 +81,41 @@ impl Shell {
             "# Araki configuration\neval $(araki shell generate {})\n",
             self
         );
-        if contents.contains(&araki_posix_config) {
-            return Ok(());
+        if !contents.contains(&araki_posix_config) {
+            let mut rcfile = File::options()
+                .append(true)
+                .open(path)
+                .map_err(|_| "Could not open {path} to modify shell config.")?;
+
+            write!(&mut rcfile, "{}", &araki_posix_config)
+                .map_err(|_| "Unable to write araki shell config to {path}")?;
         }
 
-        let mut file = File::options()
-            .append(true)
-            .open(path)
-            .map_err(|_| "Could not open {path} to modify shell config.")?;
+        let dir = get_default_araki_bin_dir()?;
+        for tool in ["pip", "uv", "pixi", "conda"] {
+            let shim_path = dir.join(tool);
+            if exists(&shim_path).is_ok_and(|val| val) {
+                remove_file(&shim_path)
+                    .map_err(|_| "Unable to remove existing shim at {shim_path:?}")?;
+            }
+            {
+                let mut shim = File::create(&shim_path)
+                    .map_err(|_| format!("Unable to write shim to {shim_path:?}"))?;
 
-        write!(&mut file, "{}", &araki_posix_config)
-            .map_err(|_| "Unable to write araki shell config to {path}")?;
+                let _ = writeln!(&mut shim, "#!/bin/{self}");
+                let _ = writeln!(&mut shim, "araki shim {tool} $@");
+
+                let perms = shim
+                    .metadata()
+                    .map_err(|_| "Could not get metadata for {shim_path:?}")?
+                    .permissions();
+
+
+                // Set the shim to be executable
+                set_permissions(&shim_path, Permissions::from_mode(perms.mode() | 0o700))
+                    .map_err(|_| "Unable to set permissions on {shim_path:?}")?;
+            }
+        }
         Ok(())
     }
 
@@ -121,7 +147,7 @@ impl Shell {
         }
     }
 
-    /// Update the shell configuration file so that araki shims take precedence
+    /// Update the shell configuration so that araki shims take precedence
     fn update_shell_config(&self) -> Result<(), String> {
         let config = self.get_shell_config()?;
         match self {
@@ -173,7 +199,7 @@ pub fn execute(args: Args) {
                 .unwrap_or_else(Shell::detect);
 
             match shell.update_shell_config() {
-                Ok(_) => println!("Shell configuration updated."),
+                Ok(_) => println!("{shell} configuration updated."),
                 Err(error) => eprintln!("{error}"),
             };
         }
