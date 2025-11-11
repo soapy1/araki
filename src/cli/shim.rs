@@ -6,12 +6,12 @@ use crate::cli::common::get_default_araki_bin_dir;
 #[derive(Parser, Debug)]
 #[command(arg_required_else_help = true)]
 pub struct Args {
-    /// Invocation of another env management tool, e.g. `pip install foo`
+    /// This command is intended to be called by shim files, and lets araki know that the user
+    /// has tried to use a shimmed environment management tool. Not intended to be called by the
+    /// user directly.
     #[arg(num_args = 1..)]
     args: Vec<String>
 }
-
-
 
 /// Given a PATH environment variable, this function strips out the araki bin directory.
 ///
