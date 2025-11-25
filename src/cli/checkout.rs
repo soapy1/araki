@@ -1,7 +1,7 @@
 use clap::Parser;
-use git2::Repository;
-use std::env;
-use std::process::Command;
+use std::process::{Command, exit};
+
+use crate::cli::common;
 
 #[derive(Parser, Debug, Default)]
 pub struct Args {
@@ -11,15 +11,10 @@ pub struct Args {
 }
 
 pub fn execute(args: Args) {
-    match env::var("PIXI_PROJECT_ROOT") {
-        Ok(_val) => print!(""),
-        Err(_) => println!("No project is currently activated"),
-    }
-
-    let project_env_dir = env::var("PIXI_PROJECT_ROOT").unwrap();
-    // TODO: error checking to make sure the project_env_dir exists
-
-    let repo = Repository::open(&project_env_dir).expect("Failed to open repository");
+    let repo = common::get_araki_git_repo().unwrap_or_else(|err| {
+        eprintln!("Could recognize the araki repo: {err}");
+        exit(1);
+    });
 
     let git_ref = if args.tag == "latest" {
         repo.find_reference("refs/heads/main")
@@ -41,7 +36,6 @@ pub fn execute(args: Args) {
 
     let _ = Command::new("pixi")
         .arg("install")
-        .current_dir(&project_env_dir)
         .output()
         .expect("Failed to execute command");
 }

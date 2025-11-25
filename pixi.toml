@@ -9,6 +9,7 @@ version = "0.1.0"
 [tasks]
 build = "cargo build"
 start = "cargo run"
+fmt = "cargo fmt --all"
 
 [dependencies]
 rust = ">=1.90.0,<1.91"
