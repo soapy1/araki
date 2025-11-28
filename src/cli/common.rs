@@ -18,8 +18,7 @@ pub fn get_araki_git_repo() -> Result<Repository, Error> {
     let araki_git_dir = cwd.join(ARAKI_GIT_DIR_NAME);
     if !araki_git_dir.exists() {
         return Err(Error::other(format!(
-            "No araki git dir files found in {:?}",
-            araki_git_dir
+            "No araki git dir files found in {araki_git_dir:?}",
         )));
     }
     Repository::open(araki_git_dir).map_err(Error::other)
