@@ -1,8 +1,8 @@
 use directories::UserDirs;
 use fs::OpenOptions;
 use git2::build::RepoBuilder;
-use git2::{Cred, FetchOptions, RemoteCallbacks};
-use std::env::temp_dir;
+use git2::{Cred, FetchOptions, RemoteCallbacks, Repository};
+use std::env::{current_dir, temp_dir};
 use std::fmt::Display;
 use std::fs;
 use std::io::{Error, ErrorKind, Write};
@@ -12,6 +12,7 @@ use uuid::Uuid;
 
 pub const ARAKI_ENVS_DIR: &str = ".araki/envs";
 pub const ARAKI_BIN_DIR: &str = ".araki/bin";
+pub const ARAKI_GIT_DIR_NAME: &str = ".araki-git";
 
 /// Get the user's araki envs directory, which by default
 /// is placed in their home directory
@@ -30,6 +31,18 @@ pub fn get_default_araki_envs_dir() -> Option<PathBuf> {
     }
 
     UserDirs::new().map(|dirs| dirs.home_dir().join(ARAKI_ENVS_DIR))
+}
+
+pub fn get_araki_git_repo() -> Result<Repository, Error> {
+    let cwd = current_dir()?;
+    let araki_git_dir = cwd.join(ARAKI_GIT_DIR_NAME);
+    if !araki_git_dir.exists() {
+        return Err(Error::other(format!(
+            "No araki git dir files found in {:?}",
+            araki_git_dir
+        )));
+    }
+    Repository::open(araki_git_dir).map_err(Error::other)
 }
 
 pub fn get_default_araki_bin_dir() -> Result<PathBuf, String> {
@@ -104,7 +117,7 @@ pub fn git_clone(repo: String, path: &Path) -> Result<(), String> {
         .map_err(|err| format!("Failed to clone {repo} to {temp_dir:?}. Reason: {err}"))?;
 
     // Rename `.git` -> `.araki-git`
-    fs::rename(temp_dir.join(".git"), temp_dir.join(".araki-git"))
+    fs::rename(temp_dir.join(".git"), temp_dir.join(ARAKI_GIT_DIR_NAME))
         .map_err(|err| format!("Error modifying the cloned repo: {err}"))?;
 
     copy_directory_contents(&temp_dir, &path.to_path_buf()).map_err(|err| {

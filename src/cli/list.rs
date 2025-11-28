@@ -1,7 +1,8 @@
 use clap::Parser;
-use git2::{Repository, Tag};
-use std::env;
-use std::process::Command;
+use git2::Tag;
+use std::process::{Command, exit};
+
+use crate::cli::common;
 
 #[derive(Parser, Debug, Default)]
 pub struct Args {
@@ -10,20 +11,15 @@ pub struct Args {
 }
 
 pub fn execute(args: Args) {
-    match env::var("PIXI_PROJECT_ROOT") {
-        Ok(_val) => println!("Available tags:"),
-        Err(_) => println!("No project is currently activated"),
-    }
-
-    let project_env_dir = env::var("PIXI_PROJECT_ROOT").unwrap();
-    // TODO: error checking to make sure the project_env_dir exists
-
-    let repo = Repository::open(&project_env_dir).expect("Failed to open repository");
+    let repo = common::get_araki_git_repo().unwrap_or_else(|err| {
+        eprintln!("Couldn't recognize the araki repo: {err}");
+        exit(1);
+    });
 
     if args.tree {
+        // TODO: use the repo object to get the tree
         let tree_output = Command::new("git")
             .arg("tree")
-            .current_dir(&project_env_dir)
             .output()
             .expect("Failed to execute command");
         let tree_stdout = String::from_utf8_lossy(&tree_output.stdout);
@@ -56,7 +52,7 @@ fn print_name(name: &str) {
 fn print_list_lines(message: Option<&str>) {
     let message = match message {
         Some(s) => s,
-        None => return,
+        _none => return,
     };
     let mut lines = message.lines().filter(|l| !l.trim().is_empty());
     if let Some(first) = lines.next() {
