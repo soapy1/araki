@@ -55,6 +55,16 @@ pub async fn execute(args: Args) {
         exit(1);
     }
 
+    // Ensure the project has a pixi.toml and pixi.lock
+    for item in ["pixi.toml", "pixi.lock"] {
+        if !path.join(item).exists() {
+            eprintln!(
+                "Provided path does not have a valid pixi project. Ensure that pixi.toml and pixi.lock files exist on path"
+            );
+            exit(1);
+        }
+    }
+
     // Create a new respository
     let backend = backends::get_current_backend().unwrap_or_else(|err| {
         eprintln!("Unable to get the current backend: {err}");
