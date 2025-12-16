@@ -21,7 +21,7 @@ pub fn execute(args: Args) {
 
     let git_ref_object = if tag == "latest" {
         match repo.find_reference("refs/heads/main") {
-            Ok(res ) => res.peel(git2::ObjectType::Commit).unwrap(),
+            Ok(res) => res.peel(git2::ObjectType::Commit).unwrap(),
             Err(_err) => {
                 eprintln!("Unable to find the latest commit at refs/heads/main");
                 exit(1);
@@ -29,12 +29,13 @@ pub fn execute(args: Args) {
         }
     } else {
         match repo.find_reference(&format!("refs/tags/{}", tag)) {
-            Ok(res ) => res.peel(git2::ObjectType::Commit).unwrap(),
+            Ok(res) => res.peel(git2::ObjectType::Commit).unwrap(),
             Err(_err) => {
-                match repo.find_object(Oid::from_str(&tag).unwrap(), Some(git2::ObjectType::Commit)) {
+                match repo.find_object(Oid::from_str(&tag).unwrap(), Some(git2::ObjectType::Commit))
+                {
                     Ok(r) => r,
                     Err(_err) => {
-                        eprintln!("{}", format!("Could not find tag '{}'", tag));
+                        eprintln!("Could not find tag '{}'", tag);
                         exit(1);
                     }
                 }

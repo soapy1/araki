@@ -27,7 +27,7 @@ pub fn execute(args: Args) {
             .expect("Failed to execute command");
         let tree_stdout = String::from_utf8_lossy(&tree_output.stdout);
         println!("{}", tree_stdout);
-    } else if args.tags { 
+    } else if args.tags {
         let tags = repo.tag_names(Some("*")).unwrap();
 
         for name_w in tags.iter() {
@@ -49,7 +49,9 @@ pub fn execute(args: Args) {
 
         // Optional: set the sorting order (default is reverse chronological by time)
         // You can use Sort::TOPOLOGICAL or combine flags like Sort::TIME | Sort::REVERSE
-        revwalk.set_sorting(Sort::TOPOLOGICAL | Sort::REVERSE).unwrap();
+        revwalk
+            .set_sorting(Sort::TOPOLOGICAL | Sort::REVERSE)
+            .unwrap();
 
         // Iterate over the commit OIDs (Object IDs) returned by the walker
         for oid in revwalk {
@@ -60,7 +62,9 @@ pub fn execute(args: Args) {
 
             // Extract commit information
             let author = commit.author();
-            let summary_bytes = commit.summary_bytes().unwrap_or_else(|| commit.message_bytes());
+            let summary_bytes = commit
+                .summary_bytes()
+                .unwrap_or_else(|| commit.message_bytes());
             let summary = str::from_utf8(summary_bytes).unwrap_or("Invalid UTF-8 message");
 
             println!(
@@ -71,7 +75,6 @@ pub fn execute(args: Args) {
                 summary,
             );
         }
-
     }
 }
 

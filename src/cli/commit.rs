@@ -7,7 +7,6 @@ use crate::common;
 
 #[derive(Parser, Debug, Default)]
 pub struct Args {
-
     #[arg(short, long, help = "Commit message")]
     message: String,
 
@@ -49,7 +48,7 @@ pub fn execute(args: Args) {
         Some("HEAD"),      // Update the HEAD reference
         &signature,        // Author
         &signature,        // Committer
-        &args.message,         // Commit message
+        &args.message,     // Commit message
         &tree,             // Tree containing the staged changes
         &[&parent_commit], // Parent commit(s)
     )
@@ -68,7 +67,7 @@ pub fn execute(args: Args) {
         }
 
         repo.tag(
-            &tag,
+            tag,
             &head,
             &signature,
             &tag_message,

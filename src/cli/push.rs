@@ -21,17 +21,13 @@ pub fn execute(args: Args) {
         let tags = repo.tag_names(Some("*")).unwrap();
 
         for name_w in tags.iter() {
-            tag_refs.push( format!("refs/tags/{}", &name_w.unwrap()) );
+            tag_refs.push(format!("refs/tags/{}", &name_w.unwrap()));
         }
         tag_refs.push("refs/heads/main".to_string());
 
         let v2: Vec<&str> = tag_refs.iter().map(|s| &**s).collect();
 
-        common::git_push(
-            "origin",
-            v2.as_slice(),
-        )
-        .unwrap_or_else(|err| {
+        common::git_push("origin", v2.as_slice()).unwrap_or_else(|err| {
             eprintln!("Unable to push to remote: {err}");
             exit(1);
         })
