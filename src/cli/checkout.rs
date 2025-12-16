@@ -16,12 +16,24 @@ pub fn execute(args: Args) {
         exit(1);
     });
 
-    let git_ref = if args.tag == "latest" {
-        repo.find_reference("refs/heads/main")
-            .expect("No tag found")
+    let tag = args.tag;
+
+    let git_ref = if tag == "latest" {
+        match repo.find_reference("refs/heads/main") {
+            Ok(res ) => res,
+            Err(_err) => {
+                eprintln!("Unable to find the latest commit at refs/heads/main");
+                exit(1);
+            }
+        }
     } else {
-        repo.find_reference(&format!("refs/tags/{}", args.tag))
-            .expect("No tag found")
+        match repo.find_reference(&format!("refs/tags/{}", tag)) {
+            Ok(res ) => res,
+            Err(_err) => {
+                eprintln!("{}", format!("Could not find tag '{}'", tag));
+                exit(1);
+            }
+        }
     };
 
     let git_ref_object = git_ref.peel(git2::ObjectType::Commit).unwrap();
